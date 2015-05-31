@@ -141,15 +141,16 @@ var MessageList = React.createClass({
 		if (this.props.className) {
 			className += ' ' + this.props.className;
 		}
+		var messageNodes = this.props.messages.map(function (message, index) {
+			return (
+				<Message author={message.author} timestamp={message.timestamp}>
+					{message.text}
+				</Message>
+			);
+		});
 		return (
 			<div className={className}>
-				{this.props.messages.map(function (message, index) {
-					return (
-						<Message author={message.author} timestamp={message.timestamp}>
-							{message.text}
-						</Message>
-					);
-				})}
+				{messageNodes}
 			</div>
 		);
 	}
@@ -195,27 +196,19 @@ var TimeAgo = React.createClass({
 });
 
 var MessageForm = React.createClass({
-	mixins: [ReactFireMixin],
-	getInitialState: function () {
-		return {messages: []};
-	},
-	componentWillMount: function () {
-		this.bindAsArray(new Firebase(firebaseUrl), 'messages');
-	},
 	handleSubmit: function (event) {
-		event.preventDefault();
 		var author = document.getElementById('author');
 		var text = document.getElementById('text');
 		if (!text.value.trim() || !author.value.trim()) {
-			return;
+			return false;
 		}
-		this.firebaseRefs['messages'].push({
+		this.props.onSubmit({
 			author: author.value.trim(),
 			text: text.value.trim(),
 			timestamp: moment().toISOString()
 		});
 		text.value = '';
-		return;
+		return false;
 	},
 	render: function () {
 		var className = 'message-form';
@@ -228,7 +221,7 @@ var MessageForm = React.createClass({
 					<Input className="col-sm-3" id="author" placeholder="Your Name" />
 					<Input className="col-sm-6" id="text" placeholder="Your Message" />
 					<Button className="col-sm-3" buttonClassName="btn-block" type="success">
-						Send #{this.state.messages.length + 1}
+						Send
 					</Button>
 				</Row>
 			</form>
@@ -243,6 +236,12 @@ var ChatApp = React.createClass({
 	},
 	componentWillMount: function () {
 		this.bindAsArray(new Firebase(firebaseUrl), 'messages');
+	},
+	handleSubmit: function (message) {
+		var messages = this.state.messages;
+		messages.push(message);
+		this.setState({messages: messages});
+		this.firebaseRefs['messages'].push(message);
 	},
 	render: function () {
 		var className = 'chat-app';
@@ -261,7 +260,7 @@ var ChatApp = React.createClass({
 								<MessageList messages={this.state.messages} />
 							</PanelBody>
 							<PanelFooter>
-								<MessageForm />
+								<MessageForm onSubmit={this.handleSubmit} />
 							</PanelFooter>
 						</Panel>
 					</div>
@@ -271,4 +270,7 @@ var ChatApp = React.createClass({
 	}
 });
 
-React.render(<ChatApp />, document.getElementById('chat'));
+React.render(
+	<ChatApp />,
+	document.getElementById('app')
+);

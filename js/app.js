@@ -141,15 +141,16 @@ var MessageList = React.createClass({displayName: "MessageList",
 		if (this.props.className) {
 			className += ' ' + this.props.className;
 		}
+		var messageNodes = this.props.messages.map(function (message, index) {
+			return (
+				React.createElement(Message, {author: message.author, timestamp: message.timestamp}, 
+					message.text
+				)
+			);
+		});
 		return (
 			React.createElement("div", {className: className}, 
-				this.props.messages.map(function (message, index) {
-					return (
-						React.createElement(Message, {author: message.author, timestamp: message.timestamp}, 
-							message.text
-						)
-					);
-				})
+				messageNodes
 			)
 		);
 	}
@@ -195,27 +196,19 @@ var TimeAgo = React.createClass({displayName: "TimeAgo",
 });
 
 var MessageForm = React.createClass({displayName: "MessageForm",
-	mixins: [ReactFireMixin],
-	getInitialState: function () {
-		return {messages: []};
-	},
-	componentWillMount: function () {
-		this.bindAsArray(new Firebase(firebaseUrl), 'messages');
-	},
 	handleSubmit: function (event) {
-		event.preventDefault();
 		var author = document.getElementById('author');
 		var text = document.getElementById('text');
 		if (!text.value.trim() || !author.value.trim()) {
-			return;
+			return false;
 		}
-		this.firebaseRefs['messages'].push({
+		this.props.onSubmit({
 			author: author.value.trim(),
 			text: text.value.trim(),
 			timestamp: moment().toISOString()
 		});
 		text.value = '';
-		return;
+		return false;
 	},
 	render: function () {
 		var className = 'message-form';
@@ -228,7 +221,7 @@ var MessageForm = React.createClass({displayName: "MessageForm",
 					React.createElement(Input, {className: "col-sm-3", id: "author", placeholder: "Your Name"}), 
 					React.createElement(Input, {className: "col-sm-6", id: "text", placeholder: "Your Message"}), 
 					React.createElement(Button, {className: "col-sm-3", buttonClassName: "btn-block", type: "success"}, 
-						"Send #", this.state.messages.length + 1
+						"Send"
 					)
 				)
 			)
@@ -243,6 +236,12 @@ var ChatApp = React.createClass({displayName: "ChatApp",
 	},
 	componentWillMount: function () {
 		this.bindAsArray(new Firebase(firebaseUrl), 'messages');
+	},
+	handleSubmit: function (message) {
+		var messages = this.state.messages;
+		messages.push(message);
+		this.setState({messages: messages});
+		this.firebaseRefs['messages'].push(message);
 	},
 	render: function () {
 		var className = 'chat-app';
@@ -261,7 +260,7 @@ var ChatApp = React.createClass({displayName: "ChatApp",
 								React.createElement(MessageList, {messages: this.state.messages})
 							), 
 							React.createElement(PanelFooter, null, 
-								React.createElement(MessageForm, null)
+								React.createElement(MessageForm, {onSubmit: this.handleSubmit})
 							)
 						)
 					)
@@ -271,4 +270,7 @@ var ChatApp = React.createClass({displayName: "ChatApp",
 	}
 });
 
-React.render(React.createElement(ChatApp, null), document.getElementById('chat'));
+React.render(
+	React.createElement(ChatApp, null),
+	document.getElementById('app')
+);
