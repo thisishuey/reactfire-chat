@@ -1,0 +1,26 @@
+{
+  "name": "ReactFire Chat",
+  "version": "0.1.0",
+  "authors": [
+    "Jeff \"Huey\" Huelsbeck <huey@carpetelam.com>"
+  ],
+  "moduleType": [
+    "amd"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "react": "~0.13.3",
+    "firebase": "~2.2.5",
+    "reactfire": "~0.4.0",
+    "jquery": "~1.11.3",
+    "bootstrap": "~3.3.4",
+    "moment": "~2.10.3"
+  }
+}
